@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../utils/axiosInstance';
+
 
 interface LoginResponse {
-  // 필요한 경우, 로그인 응답 인터페이스를 업데이트하세요.
-  // 서버에서 반환되는 therapistId는 본문에 있으므로 아래와 같이 타입을 지정할 수 있습니다.
   therapistId: number;
 }
 
@@ -16,12 +16,10 @@ export const useLogin = () => {
 
   const handleLogin = async (): Promise<void> => {
     try {
-      const response = await axios.post<LoginResponse>(
-
-        'http://3.38.106.51:7001/user/login',
-        { id, password },
-      );
-
+      const response = await axiosInstance.post<LoginResponse>('/user/login', {
+        id,
+        password,
+      });
 
       if (response.status === 200) {
         const token = response.headers['authorization']; // 헤더에서 토큰 추출

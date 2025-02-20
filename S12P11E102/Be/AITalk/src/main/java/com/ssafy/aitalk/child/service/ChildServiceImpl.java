@@ -1,12 +1,15 @@
 package com.ssafy.aitalk.child.service;
 
 import com.ssafy.aitalk.child.dto.*;
+import com.ssafy.aitalk.child.entity.Center;
 import com.ssafy.aitalk.child.entity.Child;
 import com.ssafy.aitalk.child.mapper.ChildMapper;
+import com.ssafy.aitalk.user.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,7 +29,6 @@ public class ChildServiceImpl implements ChildService {
                 .centerId(request.getCenterId())
                 .childName(request.getChildName())
                 .protectorNumber(request.getProtectorNumber())
-                .profileImage(request.getProfileImage())
                 .disabilityType(request.getDisabilityType())
                 .age(request.getAge())
                 .build();
@@ -79,7 +81,6 @@ public class ChildServiceImpl implements ChildService {
                 .centerId(request.getCenterId())
                 .childName(request.getChildName())
                 .protectorNumber(request.getProtectorNumber())
-                .profileImage(request.getProfileImage())
                 .disabilityType(request.getDisabilityType())
                 .age(request.getAge())
                 .build();
@@ -92,6 +93,24 @@ public class ChildServiceImpl implements ChildService {
     public void deleteChild(Integer childId) {
         childMapper.deleteTreatmentsByChildId(childId); // 치료 데이터 삭제
         childMapper.deleteChild(childId);               // 아동 데이터 삭제
+    }
+
+    @Override
+    public List<CenterListResponse> getCenterList() {
+        List<Center> centerList = childMapper.findCenter();
+        List<CenterListResponse> centerListResponse = new ArrayList<>();
+        for(Center center : centerList) {
+            CenterListResponse centerResponse = CenterListResponse.builder()
+                    .centerId(center.getCenterId())
+                    .centerName(center.getCenterName())
+                    .centerNumber(center.getCenterNumber())
+                    .centerAddress(center.getCenterAddress())
+                    .build();
+            centerListResponse.add(centerResponse);
+        }
+
+
+        return centerListResponse;
     }
 
 }

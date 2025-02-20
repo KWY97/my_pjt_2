@@ -23,7 +23,7 @@ interface ResistCameraDialogProps {
   message: string;
   from: string;
   isSmall: boolean;
-  cardData: { therapist_id: number; name: string }; // NFC 카드에서 읽은 사용자 정보
+  cardData: { therapist_id: number; therapist_name: string }; // NFC 카드에서 읽은 사용자 정보
 }
 
 export default function ResistCameraDialog({
@@ -36,8 +36,8 @@ export default function ResistCameraDialog({
   cardData,
 }: ResistCameraDialogProps) {
   // 얼굴 아이콘 경로 (상황에 따라 작은 이미지나 기본 이미지 선택)
-  const faceIdImage: string = 'src/assets/Login/FaceID.svg';
-  const faceIdImageSmall: string = 'src/assets/Login/FaceID_small.svg';
+  const faceIdImage: string = 'images/login/FaceID.svg';
+  const faceIdImageSmall: string = 'images/login/FaceID_small.svg';
   const navigate = useNavigate();
 
   // webcam 및 canvas DOM 접근을 위한 ref
@@ -47,7 +47,13 @@ export default function ResistCameraDialog({
   const [isVerifying, setIsVerifying] = useState(false);
 
   // useFaceRegistration hook을 호출하여 얼굴 인식 및 등록 로직 실행
-  UseFaceResistration(webcamRef, canvasRef, isVerifying, setIsVerifying, cardData);
+  UseFaceResistration(
+    webcamRef,
+    canvasRef,
+    isVerifying,
+    setIsVerifying,
+    cardData,
+  );
 
   return (
     <DialogRoot size={'xs'} placement="center">
@@ -90,7 +96,7 @@ export default function ResistCameraDialog({
                 if (from === 'thera_face') {
                   navigate('/KidFaceLoginPage');
                 } else {
-                  alert("아이 얼굴 등록 완료");
+                  navigate('/play-select');
                 }
               }}
             >

@@ -1,243 +1,103 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import * as tf from '@tensorflow/tfjs';
-import * as blazeface from '@tensorflow-models/blazeface';
-import { BlazeFacePrediction } from '@tensorflow-models/blazeface';
+import { useDispatch } from 'react-redux';
+import { setChildId } from '../feature/child/childSlice';
+import { usePlayStart } from '../hooks/UsePlayStart';
+import { RootState } from '../feature/store';
+import { useSelector } from 'react-redux';
 
-/**
-UseFaceRegistration hook
-– webcamRef: react‑webcam 컴포넌트의 ref (video 요소 접근)
-– canvasRef: 얼굴 검출 결과를 그릴 canvas의 ref
-– isVerifying / setIsVerifying: 중복 등록 방지를 위한 상태
-– cardData: 등록할 대상의 데이터 (예: therapist_id, therapist_name)
-이 hook은 BlazeFace를 이용해 주기적으로 얼굴 검출 후,
-얼굴이 검출되면 API에 등록 요청을 보냅니다.
-*/
 
-// 도우미 함수: 라운드 처리된 사각형 그리기
-function drawRoundedRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number
-) {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + width - radius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-  ctx.lineTo(x + width, y + height - radius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  ctx.lineTo(x + radius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-  ctx.stroke();
-}
-
-const UseFaceRegistration = (
-  webcamRef: React.MutableRefObject<any>,
-  canvasRef: React.MutableRefObject<any>,
-  isVerifying: boolean,
-  setIsVerifying: (verifying: boolean) => void,
-  cardData: { therapist_id: number; therapist_name: string },
-) => {
+const UseFaceRegistration = () => {
+  const currentUser = useSelector((state: RootState) => state.user.currentUser);
+  const playStart = usePlayStart();
   const navigate = useNavigate();
-  const [registrationComplete, setRegistrationComplete] = useState(false);
-  const [model, setModel] = useState<blazeface.BlazeFaceModel | null>(null);
+  const dispatch = useDispatch();
+  const [isRegisting, setIsRegisted] = useState(false);
+  const [isCompleted, setIsComplted] = useState(false);
+  
+  // AbortController를 저장할 ref 생성
+  // 이는 유저가 뒤로가기 할 경우 요청을 중단하기 위함
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // detectionDataRef: face detection 결과를 저장해 두고, drawOverlay에서 사용합니다.
-  const detectionDataRef = useRef<{
-    videoRect: DOMRect;
-    scaleX: number;
-    predictions: BlazeFacePrediction[];
-    // predictions: blazeface.Face[];
-  } | null>(null);
-
-  // 첫 로드 시 BlazeFace 모델 로드
-  useEffect(() => {
-    const loadModel = async () => {
-      await tf.ready();
-      const loadedModel = await blazeface.load();
-      setModel(loadedModel);
-    };
-    loadModel();
-  }, []);
-
-  // 얼굴 검출 업데이트 (500ms 주기)
-  useEffect(() => {
-    const detectionInterval = setInterval(async () => {
-      if (registrationComplete) return;
-      if (webcamRef.current && canvasRef.current && model) {
-        const video = webcamRef.current.video;
-        if (!video || video.readyState !== 4) return;
-
-        const videoRect = video.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-        const canvas = canvasRef.current;
-        // 캔버스 크기를 디스플레이에 맞게 갱신
-        canvas.width = videoRect.width * dpr;
-        canvas.height = videoRect.height * dpr;
-        canvas.style.width = `${videoRect.width}px`;
-        canvas.style.height = `${videoRect.height}px`;
-
-        // intrinsic 크기와 표시 크기의 비율 계산
-        const scaleX = videoRect.width / video.videoWidth;
-        const scaleY = videoRect.height / video.videoHeight;
-
-        // BlazeFace로 얼굴 검출
-        const predictions = await model.estimateFaces(video, false);
-        // detection 관련 데이터를 업데이트
-        detectionDataRef.current = { videoRect, scaleX, scaleY, predictions };
-
-        // 얼굴이 감지되었고, 등록 중이 아니며 cardData에 therapist_id가 있다면 등록 API 호출
-        if (!isVerifying && predictions.length > 0 && cardData?.therapist_id) {
-          setIsVerifying(true);
-          // 필요 시 react‑webcam의 getScreenshot()을 통해 snapshot 획득
-          const faceSnapshot = webcamRef.current.getScreenshot?.();
-          await registerFace(
-            cardData.therapist_id,
-            cardData.therapist_name,
-            navigate,
-            setIsVerifying,
-            () => setRegistrationComplete(true),
-          );
-        }
-      }
-    }, 500);
-    return () => clearInterval(detectionInterval);
-  }, [
-    isVerifying,
-    webcamRef,
-    canvasRef,
-    model,
-    cardData,
-    registrationComplete,
-    navigate,
-    setIsVerifying,
-  ]);
-
-  // requestAnimationFrame을 이용해 부드럽게 오버레이 그리기 (깜빡임 방지)
-  useEffect(() => {
-    const drawOverlay = () => {
-      if (!canvasRef.current || !detectionDataRef.current) {
-        requestAnimationFrame(drawOverlay);
-        return;
-      }
-      const ctx = canvasRef.current.getContext('2d');
-      if (!ctx) {
-        requestAnimationFrame(drawOverlay);
-        return;
-      }
-      const { videoRect, scaleX, scaleY, predictions } = detectionDataRef.current;
-      const dpr = window.devicePixelRatio || 1;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, videoRect.width, videoRect.height);
-
-      const isMirrored = true;
-      predictions.forEach((prediction) => {
-        if (prediction.topLeft && prediction.bottomRight) {
-          const [x, y] = prediction.topLeft as [number, number];
-          const [x2, y2] = prediction.bottomRight as [number, number];
-          const boxWidth = (x2 - x) * scaleX;
-          const boxHeight = (y2 - y) * scaleY;
-          const adjustedX = isMirrored
-            ? videoRect.width - x * scaleX - boxWidth
-            : x * scaleX;
-          const adjustedY = y * scaleY;
-
-          // 그라데이션 컬러 생성 (세련된 효과)
-          const gradient = ctx.createLinearGradient(
-            adjustedX,
-            adjustedY,
-            adjustedX + boxWidth,
-            adjustedY + boxHeight,
-          );
-          gradient.addColorStop(0, 'rgba(30,144,255,0.9)');
-          gradient.addColorStop(1, 'rgba(0,191,255,0.3)');
-
-          ctx.strokeStyle = gradient;
-          ctx.lineWidth = 4;
-          ctx.setLineDash([12, 6]);
-          ctx.shadowColor = 'rgba(0,0,0,0.2)';
-          ctx.shadowBlur = 6;
-          ctx.shadowOffsetX = 2;
-          ctx.shadowOffsetY = 2;
-
-          // 라운드 처리된 사각형 그리기
-          drawRoundedRect(ctx, adjustedX, adjustedY, boxWidth, boxHeight, 10);
-
-          // 텍스트 라벨 추가
-          ctx.font = '16px sans-serif';
-          ctx.fillStyle = gradient;
-          ctx.fillText('Face Detected!', adjustedX, adjustedY - 10);
-
-          ctx.setLineDash([]);
-          ctx.shadowColor = 'transparent';
-
-          // 얼굴 landmark 시각화
-          if (prediction.landmarks) {
-            const landmarksArray: number[][] = Array.isArray(prediction.landmarks)
-              ? (prediction.landmarks as number[][])
-              : (prediction.landmarks as tf.Tensor).arraySync() as number[][];
-            landmarksArray.forEach((landmark) => {
-              const [lx, ly] = landmark;
-              const adjustedLX = isMirrored
-                ? videoRect.width - lx * scaleX
-                : lx * scaleX;
-              const adjustedLY = ly * scaleY;
-              ctx.beginPath();
-              ctx.arc(adjustedLX, adjustedLY, 3, 0, Math.PI * 2);
-              ctx.fillStyle = 'rgba(64, 255, 0, 0.82)';
-              ctx.fill();
-              ctx.closePath();
-            });
-          }
-        }
-      });
-      requestAnimationFrame(drawOverlay);
-    };
-    requestAnimationFrame(drawOverlay);
-  }, [canvasRef]);
-
-  /**
-  registerFace 함수
-  서버에 POST 요청을 보내어 얼굴 등록을 시도합니다.
-  */
   async function registerFace(
     therapist_id: number,
     therapist_name: string,
-    navigate: any,
-    setIsVerifying: (verifying: boolean) => void,
-    onRegistrationComplete: () => void,
+    from: string,
+    child_id: number,
+    child_name: string,
   ) {
+    // 1. 얼굴 등록 요청과 동시에 setIsRegisted를 true로 변경 ->  animation_1
+    setIsRegisted(true);
+    const who = from === 't' ? 'user/face-regist' : 'child/face-regist';
+    const body =
+      from === 't'
+        ? { therapist_id, therapist_name }
+        : { child_id, child_name };
+
+    console.log(body);
+
+    // AbortController 생성 및 signal 전달
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    
     try {
-      const response = await fetch(
-        'http://192.168.30.189:5000/user/face-regist',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ therapist_id, therapist_name }),
-        },
-      );
+      const response = await fetch(`http://localhost:5000/${who}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal, // 요청 취소를 위한 signal 추가
+      });
+      console.log(`✅ 요청 주소 ${who}`);
+
       const data = await response.json();
+
+      console.log('✅ 서버 응답 데이터:', data);
       if (Number(data?.status) === 201) {
-        alert('얼굴 등록이 성공했습니다!');
-        onRegistrationComplete();
-        navigate('/KidFaceLoginPage');
+        setIsComplted(true);
+        if (from === 't') {
+          // 2. 아이 얼굴 로그인을 위해 페이지 이동
+          setTimeout(() => {
+            navigate('/KidFaceLoginPage');
+          }, 2360);
+        } else {
+          console.log(data)
+          // 1. redux에 현재 치료 대상 아이 정보 저장
+          dispatch(setChildId(data.data));
+          setTimeout(async () => {
+            try {
+              // 아래 함수 동작으로 play-select 페이지로 이동
+              await playStart({
+                therapist_id: currentUser?.therapist_id,
+                child_id: data.data.child_id,
+              });
+            } catch (error) {
+              console.error('플레이 시작 요청 실패:', error);
+            }
+          }, 2360);
+        }
       } else {
+        alert(`${data?.message}`);
         console.error('얼굴 등록 실패:', data?.message || '');
       }
     } catch (error) {
       console.error('서버 요청 중 에러 발생:', error);
     } finally {
-      setIsVerifying(false);
+      // 2. 요청에 대한 응답을 받으면 setIsRegisted false로 변환하여
+      // animation_2 보여주기
+      setIsRegisted(false);
     }
   }
+    // 컴포넌트 언마운트 시 요청 취소
+    useEffect(() => {
+      return () => {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort(); // 요청 취소
+          abortControllerRef.current = null; // ref 초기화
+        }
+      };
+    }, []);
 
-  return { registrationComplete };
+  return { isRegisting, isCompleted, registerFace }; // registerFace를 반환
 };
 
 export default UseFaceRegistration;

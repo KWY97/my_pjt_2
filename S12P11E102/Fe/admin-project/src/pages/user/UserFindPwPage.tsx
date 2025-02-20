@@ -2,12 +2,11 @@ import './UserSignUpPage.css';
 import LogoSVG from '../../assets/User/AiTalkLogo.svg';
 import { useFindPw } from '../../hooks/user/useFindPw';
 import { InputField } from '../../components/user/common/InputComponent';
-import ConfirmButton from '../../components/user/common/ConfirmButton';
 import EmailAuthComponent from '../../components/user/common/EmailAuthComponent';
 import { useEmailVerify } from '../../hooks/user/useEmailAuth';
+import { useEmailAuthConfirm } from '../../hooks/user/useEmailAuthConfirm';
 
 const UserFindPwPage: React.FC = () => {
-
   const {
     name,
     setName,
@@ -16,10 +15,10 @@ const UserFindPwPage: React.FC = () => {
     email,
     setEmail,
     errorMessage,
-    handleFindPw,
   } = useFindPw();
+  const { handleEmailVerify } = useEmailVerify();
+  const { confirmEmail } = useEmailAuthConfirm();
 
-  const { handleEmailVerify, loading, error } = useEmailVerify();
   return (
     <div className="user-signup-container">
       <div className="signup-box">
@@ -38,13 +37,13 @@ const UserFindPwPage: React.FC = () => {
           onChange={(e) => setId(e.target.value)}
         />
         <EmailAuthComponent
+          id={id}
           email={email}
           onEmailChange={(e) => setEmail(e.target.value)}
           onVerify={handleEmailVerify}
+          onConfirm={confirmEmail}
+          from='findPw'
         />
-        <ConfirmButton onClick={handleFindPw} className="signup-button">
-          비밀번호 찾기
-        </ConfirmButton>
         {errorMessage && <p className="error-message">{errorMessage}</p>}
       </div>
     </div>

@@ -6,23 +6,29 @@ import DetailPlaySelectText from '../components/Texts/DetailPlaySelectText';
 import CardInfoContainer from '../components/Common/CardInfoContainer';
 import WordButton from '../components/Common/WordButton';
 import ThreeSentenceButton from '../components/Common/ThreeSentenceButton';
+import { useSelector } from 'react-redux';
+import { RootState } from '../feature/store';
 
 import './CardPlaySelectPage.css';
 
 export default function CardPlaySelectPage() {
   const location = useLocation();
   const cardData = location.state || { name: 'Unknown', image: 'default' };
-
+  const currentScheduleId: number | null = useSelector((state: RootState) =>
+    state.treatment?.treatmentId
+      ? Number(state.treatment?.treatmentId) // 🔥 string을 number로 변환
+      : null,
+  );
   // 데이터가 배열이라면 첫 번째 요소 사용
   const parsedCardData = Array.isArray(cardData) ? cardData[0] : cardData;
 
   // 이미지 경로 설정
-  const imageSrc = `/src/assets/card/${parsedCardData.image}.png`;
+  const imageSrc = `/images/card/${parsedCardData.image}.png`;
 
   return (
     <div>
       <NavbarContainer>
-        <BackPlaySelectButton />
+        <BackPlaySelectButton className="CustomMarginTop" />
       </NavbarContainer>
       <div className="CardPlaySelectContainer">
         <DetailPlaySelectText />
@@ -46,15 +52,23 @@ export default function CardPlaySelectPage() {
               }}
             >
               <CardInfoContainer
+                className="CardPlaySelectInfoContainer"
                 imageSrc={imageSrc}
                 cardName={parsedCardData.name}
               />
             </motion.div>
           </motion.div>
 
-          <div className="ButtonContainer">
-            <WordButton targetPath="/card-play-select/word" />
-            <ThreeSentenceButton targetPath="/card-play-select/three-sentence" />
+          <div className="ButtonsContainers">
+            <WordButton
+              className="CardPlaySelectWordButtonStyle"
+              targetPath="/card-play-select/word"
+            />
+            <ThreeSentenceButton
+              className="CardPlaySelectThreeSentenceButtonStyle"
+              schedule_id={currentScheduleId ?? 0}
+              word={parsedCardData.image}
+            />
           </div>
         </div>
       </div>

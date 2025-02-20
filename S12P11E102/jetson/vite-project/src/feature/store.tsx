@@ -1,18 +1,21 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import userReducer from './user/userSlice';
 import childReducer from './child/childSlice';
-import storage from 'redux-persist/lib/storage';
+import treatmentReducer from "./treatment/treatmentSlice";
+// import storage from 'redux-persist/lib/storage';
+import sessionStorage from 'redux-persist/lib/storage/session';
 import { persistStore, persistReducer } from 'redux-persist';
 
 const persistConfig = {
   key: 'root',
-  storage,
-  whitelist: ['user','child'], // user slice만 persist 함.
+  storage: sessionStorage,
+  whitelist: ['user','child', 'treatment'],
 };
 
 const rootReducer = combineReducers({
   user: userReducer,
   child: childReducer,
+  treatment: treatmentReducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -26,6 +29,5 @@ export const store = configureStore({
 });
 
 export const persistor = persistStore(store);
-
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

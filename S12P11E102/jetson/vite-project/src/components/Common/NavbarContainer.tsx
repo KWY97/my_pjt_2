@@ -11,7 +11,15 @@ export default function NavbarContainer({ children }: NavbarContainerProps) {
   return (
     <div className="NavbarContainer">
       <button className="MusicToggleButton" onClick={toggleAudio}>
-        {isPlaying ? '🔇 음악 끄기' : '🔊 음악 켜기'}
+        <img
+          src={
+            isPlaying
+              ? '/images/common/sound_off.png'
+              : '/images/common/sound_on.png'
+          }
+          alt={isPlaying ? '음악 끄기' : '음악 켜기'}
+          className="MusicToggleIcon"
+        />
       </button>
       {children} {/* children을 추가하여 원하는 요소를 삽입 가능하게 만듦 */}
     </div>

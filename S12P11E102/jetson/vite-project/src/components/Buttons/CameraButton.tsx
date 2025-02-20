@@ -1,15 +1,28 @@
 import { useNavigate } from 'react-router-dom';
 
-export default function CameraButton() {
+interface CameraButtonProps {
+  scheduleId: number | null;
+  className?: string;
+}
+
+export default function CameraButton({
+  scheduleId,
+  className,
+}: CameraButtonProps) {
   const navigate = useNavigate();
 
   const handleClick = (): void => {
-    navigate('/camera-scan');
+    if (!scheduleId) {
+      console.error('❌ scheduleId가 없습니다.');
+      return;
+    }
+
+    navigate('/camera-scan', { state: { scheduleId } });
   };
 
   return (
-    <button onClick={handleClick}>
-      <img src="/src/assets/menu/camera.png" alt="카메라 아이콘" />
+    <button className={`CameraButton ${className || ''}`} onClick={handleClick}>
+      <img src="/images/menu/camera.png" alt="카메라 아이콘" />
       <span>사진 찍기</span>
     </button>
   );

@@ -2,13 +2,13 @@
 
 .ImgGenerateTextContainer {
   position: absolute;
-  top: 10%;
+  top: 12%;
   text-align: center;
 }
 
 .ImgGenerateText {
-  font-size: 2.5rem;
+  font-size: 5rem;
   font-weight: bold;
-  color: #000;
+  color: #5a3e2b;
   font-family: 'Dongle', serif;
 }

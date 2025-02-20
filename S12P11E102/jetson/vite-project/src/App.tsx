@@ -10,14 +10,11 @@ import CardPlaySelectWordPage from './pages/CardPlaySelectWordPage';
 import CardPlaySelectWordVerbPage from './pages/CardPlaySelectWordVerbPage';
 import CardPlaySelectWordVerbSentencePage from './pages/CardPlaySelectWordVerbSentencePage';
 import CardPlaySelectThreeSentencePage from './pages/CardPlaySelectThreeSentencePage';
+import CategoryCardPlaySelectPage from './pages/CategoryCardPlaySelectPage';
 
 import CameraScanPage from './pages/CameraScanPage';
 import CameraImageGeneratePage from './pages/CameraImageGeneratePage';
 import CameraPlaySelectPage from './pages/CameraPlaySelectPage';
-import CameraPlaySelectWordPage from './pages/CameraPlaySelectWordPage';
-import CameraPlaySelectWordVerbPage from './pages/CameraPlaySelectWordVerbPage';
-import CameraPlaySelectWordVerbSentencePage from './pages/CameraPlaySelectWordVerbSentencePage';
-import CameraPlaySelectThreeSentencePage from './pages/CameraPlaySelectThreeSentencePage';
 
 import AiTalkPage from './pages/AiTalkPage';
 
@@ -28,6 +25,8 @@ import TherapistFaceResisterCompletePage from './pages/TherapistFaceRegisterComp
 import HomeAfterLoginPage from './pages/HomeAfterLoginPage';
 import KidSelectPage from './pages/KidSelectPage';
 import KidFaceLoginPage from './pages/KidFaceLoginPage';
+import NfcTagForFaceRegisterPage from './pages/NfcTagForFaceRegistPage';
+import NfcTagForLoginPage from './pages/NfcTagForLoginPage';
 
 export default function App() {
   return (
@@ -74,6 +73,10 @@ function MainRoutes() {
         path="/card-play-select/three-sentence"
         element={<CardPlaySelectThreeSentencePage />}
       />
+      <Route
+        path="/category-card-play-select"
+        element={<CategoryCardPlaySelectPage />}
+      />
       <Route path="/camera-scan" element={<CameraScanPage />}></Route>
       <Route
         path="/camera-img-generate"
@@ -82,22 +85,6 @@ function MainRoutes() {
       <Route
         path="/camera-play-select"
         element={<CameraPlaySelectPage />}
-      ></Route>
-      <Route
-        path="/camera-play-select/word"
-        element={<CameraPlaySelectWordPage />}
-      ></Route>
-      <Route
-        path="/camera-play-select/word/verb"
-        element={<CameraPlaySelectWordVerbPage />}
-      ></Route>
-      <Route
-        path="/camera-play-select/word/verb/sentence"
-        element={<CameraPlaySelectWordVerbSentencePage />}
-      ></Route>
-      <Route
-        path="/camera-play-select/three-sentence"
-        element={<CameraPlaySelectThreeSentencePage />}
       ></Route>
       <Route path="/ai-talk" element={<AiTalkPage />} />
       <Route
@@ -116,6 +103,11 @@ function MainRoutes() {
       <Route path="/HomeAfterLoginPage" element={<HomeAfterLoginPage />} />
       <Route path="/KidSelectPage" element={<KidSelectPage />} />
       <Route path="/KidFaceLoginPage" element={<KidFaceLoginPage />} />
+      <Route
+        path="/NfcTagForFaceRegisterPage"
+        element={<NfcTagForFaceRegisterPage />}
+      />
+      <Route path="/NfcTagForLoginPage" element={<NfcTagForLoginPage />} />
     </Routes>
   );
 }

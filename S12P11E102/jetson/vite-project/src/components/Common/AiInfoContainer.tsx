@@ -1,5 +1,4 @@
 import './AiInfoContainer.css';
-
 interface AiInfoContainerProps {
   aiText?: string; // AI 관련 텍스트 (기본값은 "AI 정보 없음")
   isTalking?: boolean; // 🔥 말하는 중 여부
@@ -14,7 +13,7 @@ export default function AiInfoContainer({
       <p className="AiText">{aiText}</p>
       <img
         className={`AiImage ${isTalking ? 'talking' : ''}`} // 🔥 말할 때 'talking' 클래스 추가
-        src="/src/assets/menu/symbol.png"
+        src="/images/menu/symbol.png"
         alt={aiText}
       />
     </div>

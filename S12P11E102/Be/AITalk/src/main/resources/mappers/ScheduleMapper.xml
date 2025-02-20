@@ -39,6 +39,17 @@
             child_id = #{id}
     </select>
 
+    <select id="findCenterName" resultType="String">
+        SELECT
+            cc.center_name
+        FROM
+            care_center cc
+                JOIN
+            care_children cch ON cc.center_id = cch.center_id
+        WHERE
+            cch.child_id = #{id}
+    </select>
+
     <select id="findChildId" resultType="Integer">
         select
             child_id
@@ -50,11 +61,11 @@
 
     <select id="selectDailySchedules" resultMap="Schedule">
         select
-            *
+        *
         from
-            treatment
-        where
-            treatment_date = #{date}
+        treatment
+        WHERE treatment_date >= #{date}
+        AND treatment_date &lt; DATE_ADD(#{date}, INTERVAL 1 DAY)
     </select>
 
     <select id="selectScheduleByScheduleId" resultMap="Schedule">
@@ -71,10 +82,10 @@
         VALUES (#{therapistId}, #{childId}, #{treatmentDate}, #{startTime}, #{endTime})
     </insert>
 
-    <select id="isTimeSlotTaken" resultType="Integer">
-        SELECT COUNT(*) FROM treatment
+    <select id="isTimeSlotTaken" resultMap="Schedule">
+        SELECT * FROM treatment
         WHERE treatment_date = #{date}
-          AND ((start_time &lt; #{endTime} AND end_time &gt; #{startTime}))
+        AND ((start_time &lt; #{endTime} AND end_time > #{startTime}))
     </select>
 
     <update id="updateSchedule" parameterType="com.ssafy.aitalk.schedule.entity.Schedule">

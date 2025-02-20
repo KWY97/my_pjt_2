@@ -17,7 +17,6 @@ CREATE TABLE care_children (
     child_id INT UNSIGNED PRIMARY KEY,
     therapist_id INT UNSIGNED,
     child_name VARCHAR(20) NOT NULL,
-    profile_image BLOB,
     disability_type VARCHAR(20),
     age INT,
     FOREIGN KEY (therapist_id) REFERENCES speech_therapist(therapist_id)
@@ -42,5 +41,6 @@ CREATE TABLE treatment (
 CREATE TABLE card (
     card_id INT UNSIGNED PRIMARY KEY,
     name VARCHAR(20),
-    image VARCHAR(20)
+    image VARCHAR(20),
+    categories json default null
 );
