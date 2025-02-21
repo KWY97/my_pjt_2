@@ -1,0 +1,14 @@
+.env
+TYPECAST_API_KEY=__pltNssQgEAG4Zz5MM8oN5eCoBQsZNbPwEwMgS3rfuQp
+TYPECAST_VOICE_ID=66596206b7bd6e89c3a2c54e
+이거 안되면 타입캐스트에서 내꺼로 바꾸면됨
+
+로컬용 requirements 랑 젯슨용 다름
+
+chatgpt도 로컬용 젯슨용 다름
+openai.ChatCompletion.create 로컬용
+openai.chat.completions.create 젯슨용
+
+cv2.CAP_V4L2 젯슨용 cv2.CAP_DSHOW 로컬용
+
+speech_service.py도 좀 다름
